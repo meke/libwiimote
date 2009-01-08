@@ -1,4 +1,4 @@
-/* $Id$ 
+/* $Id: wiimote_board.c 53 2007-03-10 14:46:36Z bja $ 
  *
  * Copyright (C) 2007, Joel Andersson <bja@kth.se>
  * 
@@ -18,40 +18,76 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "wiimote.h"
-#include "wiimote_io.h"
 #include "wiimote_error.h"
+#include "wiimote_io.h"
 #include "wiimote_board.h"
-#include "wiimote_event.h"
 
-#define CLASSIC_MEM_START	0x04a40000
-#define CLASSIC_MEM_END		0x04a400ff
-#define CLASSIC_REG_CTRL	0x04a40040
+#define NUNCHUK_MEM_START	0x04a40000
+#define NUNCHUK_MEM_END		0x04a400ff
+#define NUNCHUK_REG_CTRL	0x04a40040
+#define NUNCHUK_REG_CAL		0x04a40020
 
-#define board_decode_byte(x)	(((x) ^ 0x17) + 0x17)
-
-int wiimote_board_enable(wiimote_t *wiimote, uint8_t enable)
+static int board_calibrate(wiimote_t *wiimote)
 {
-	if (wiimote_write_byte(wiimote, CLASSIC_REG_CTRL, enable ? 0x00 : 0xff) < 0) {
-		wiimote_error("wiimote_board_enable(): unable to write board");
+	/*
+	uint8_t *data = (uint8_t *)&wiimote->ext.board.ctl;
+	if (wiimote_read(wiimote, NUNCHUK_REG_CAL, data, sizeof (board_cal_t)) < 0) {		
+		wiimote_set_error("board_calibrate(): unable to read calibration data");
+		return WIIMOTE_ERROR;
+	}
+	*/
+	return WIIMOTE_OK;
+}
+
+int board_enable(wiimote_t *wiimote, uint8_t enable)
+{
+	if (wiimote_write_byte(wiimote, NUNCHUK_REG_CTRL, enable ? 0x00 : 0xff) < 0) {
+		wiimote_set_error("board_free(): unable to write board");
 		return WIIMOTE_ERROR;
 	}
 	return WIIMOTE_OK;
 }
 
-int wiimote_board_init(wiimote_t *wiimote)
+int board_init(wiimote_t *wiimote)
 {
-	if (wiimote_board_enable(wiimote, 1) < 0) {
-		wiimote_error("wiimote_board_init(): unable to initialize board controller");
+	if (board_enable(wiimote, 1) < 0) {
+		wiimote_set_error("board_init(): unable to initialize board");
+		return WIIMOTE_ERROR;
+	}
+	
+	if (board_calibrate(wiimote) < 0) {
+		wiimote_set_error("board_init(): unable to calibrate board");
 		return WIIMOTE_ERROR;
 	}
 	
 	return WIIMOTE_OK;
 }
 
-void wiimote_board_decode(uint8_t *data, uint32_t size)
+int board_update(wiimote_t *wiimote)
+{
+	uint8_t data[16];
+	
+	if (wiimote_read(wiimote, NUNCHUK_MEM_START, data, 16) < 0) {
+		wiimote_set_error("board_update(): unable to read board state: %s", wiimote_get_error());
+		return WIIMOTE_ERROR;
+	}
+	
+	board_decode(&data[8], 6);
+		
+	if (!memcpy((uint8_t*)&wiimote->ext.board, &data[8], 6)) {
+		wiimote_set_error("board_update(): memcpy: %s", strerror(errno));
+		return WIIMOTE_ERROR;
+	}
+	
+	return WIIMOTE_OK;
+}
+
+void board_decode(uint8_t *data, uint32_t size)
 {
 	int i;
 	for (i=0; i<size; i++) {
@@ -59,7 +95,17 @@ void wiimote_board_decode(uint8_t *data, uint32_t size)
 	}
 }
 
-int wiimote_board_update(wiimote_t *wiimote, uint8_t *data)
+int board_free(wiimote_t *wiimote)
 {
-	return 0;
+	board_enable(wiimote, 0);
+	
+	/*
+	if (memset(&wiimote->ext.board.cal, 0, sizeof (board_cal_t)) < 0) {
+		wiimote_set_error("board_free(): unable to clear calibration data");
+		return WIIMOTE_ERROR;
 }
+	*/
+	return WIIMOTE_OK;
+}
+
+

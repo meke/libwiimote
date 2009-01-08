@@ -248,7 +248,7 @@ static int process_state(wiimote_t *wiimote, wiimote_state_t *ev)
 			wiimote_classic_update(wiimote, ev->ext.data);
 		}
 		else if (wiimote->ext.id == WIIMOTE_BOARD_ID) {
-			wiimote_board_update(wiimote, ev->ext.data);
+			memcpy(&wiimote->ext.board, ev->ext.data, sizeof (wiimote_board_t));
 		}
 		break;
 		
@@ -268,7 +268,7 @@ static int process_state(wiimote_t *wiimote, wiimote_state_t *ev)
 			wiimote_classic_update(wiimote, ev->ext1.data);
 		}
 		else if (wiimote->ext.id == WIIMOTE_BOARD_ID) {
-			wiimote_board_update(wiimote, ev->ext1.data);
+			memcpy(&wiimote->ext.board, ev->ext1.data, sizeof (wiimote_board_t));
 		}
 		break;
 		
@@ -285,7 +285,8 @@ static int process_state(wiimote_t *wiimote, wiimote_state_t *ev)
 			wiimote_classic_update(wiimote, ev->ext2.data);
 		}
 		else if (wiimote->ext.id == WIIMOTE_BOARD_ID) {
-			wiimote_board_update(wiimote, ev->ext2.data);
+			memcpy(&wiimote->ext.board, ev->ext2.data, sizeof (wiimote_board_t));
+			conv_ir_ext(wiimote, &ev->ext2.ir);
 		}
 		break;
 		
@@ -303,6 +304,9 @@ static int process_state(wiimote_t *wiimote, wiimote_state_t *ev)
 		}
 		else if (wiimote->ext.id == WIIMOTE_CLASSIC_ID) {
 			wiimote_classic_update(wiimote, ev->ext3.data);
+		}
+		else if (wiimote->ext.id == WIIMOTE_BOARD_ID) {
+			memcpy(&wiimote->ext.board, ev->ext3.data, sizeof (wiimote_board_t));
 		}
 		break;
 	

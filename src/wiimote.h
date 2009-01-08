@@ -229,10 +229,10 @@ typedef struct {
 } __attribute__((packed)) wiimote_classic_t;
 
 typedef struct {
-        uint8_t tl;  /* Interpolated */
-        uint8_t tr;
-        uint8_t bl;
-        uint8_t br;  /* End interp */
+//        uint8_t tl;  /* Interpolated */
+//        uint8_t tr;
+//        uint8_t bl;
+//        uint8_t br;  /* End interp */
         uint8_t rtl; /* RAW */
         uint8_t rtr;
         uint8_t rbl;

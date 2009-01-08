@@ -1,4 +1,4 @@
-/* $Id$ 
+/* $Id: wiimote_board.h 51 2007-03-10 14:36:44Z bja $ 
  *
  * Copyright (C) 2007, Joel Andersson <bja@kth.se>
  * 
@@ -17,15 +17,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
  
-#ifndef _WIIMOTE_BOARD_H_
-#define _WIIMOTE_BOARD_H_
+#ifndef _BOARD_H_
+#define _BOARD_H_
 
 #include "wiimote.h"
-#include "wiimote_event.h"
 
 #define WIIMOTE_BOARD_ID  0x04
+#define board_decode_byte(x)	(((x) ^ 0x17) + 0x17)
 
-int wiimote_board_init(wiimote_t *wiimote);
-int wiimote_board_update(wiimote_t *wiimote, uint8_t *data);
+int board_init(wiimote_t *wiimote);
+int board_update(wiimote_t *wiimote);
+int board_free(wiimote_t *wiimote);
+void board_decode(uint8_t *data, uint32_t size);
+int board_enable(wiimote_t *wiimote, uint8_t enable);
 
-#endif /* _WIIMOTE_BOARD_H_ */
+#endif /* _BOARD_H_ */
